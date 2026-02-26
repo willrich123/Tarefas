@@ -992,15 +992,22 @@ function reqNotif(){
     if(p==='granted'){
       notifOk=true;
       document.getElementById('notifBanner').style.display='none';
-      // inform about support
       if(navigator.serviceWorker && 'showTrigger' in Notification.prototype){
         toast('🔔 Notificações ativadas e funcionarão mesmo com app fechado!');
       }else{
-        toast('🔔 Notificações ativadas (funcionam apenas com app aberto/bg)');
+        toast('🔔 Notificações ativadas, MAS só serão disparadas com app aberto.');
+        toast('Para receber com app fechado você precisará implementar Push/API servidor ou usar Chrome Android PWA.');
+        // Typical push-subscription flow (requires server):
+        // navigator.serviceWorker.ready.then(reg=>{
+        //   return reg.pushManager.subscribe({
+        //     userVisibleOnly: true,
+        //     applicationServerKey: VAPID_PUBLIC_KEY
+        //   });
+        // }).then(sub=>{
+        //   // enviar `sub` ao seu servidor e agendar notificações por lá
+        // });
       }
       new Notification('Tarefas ✓',{body:'Você receberá lembretes aqui!'});
-      // after permission is granted we need to schedule any reminders
-      // that were created before the permission was granted
       schedAll();
     }else toast('🔕 Permissão negada');
   });
@@ -1595,6 +1602,11 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden) schedAll(
 // register service worker in case we have push/trigger support
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW reg failed',e));
+}
+
+// warn if neither background triggers nor push will work without a server
+if('serviceWorker' in navigator && !('showTrigger' in Notification.prototype)){
+  toast('⚠️ Sem agendamento nativo. Chrome/Android PWA com Push/servidor é necessário.');
 }
 </script>
 </body>
