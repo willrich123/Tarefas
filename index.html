@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-title" content="Tarefas"/>
 <meta name="description" content="Seu gerenciador de tarefas pessoal"/>
 <title>Tarefas</title>
-<link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cabinet+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -61,7 +60,7 @@ body{
   width:252px;flex-shrink:0;background:var(--surface);
   border-right:1px solid var(--border);
   display:flex;flex-direction:column;padding:20px 13px;gap:1px;
-  position:fixed;top:0;left:0;height:100vh;z-index:70;
+  position:fixed;top:0;left:0;height:100vh;z-index:110;
   overflow-y:auto;overflow-x:hidden;
   transition:transform var(--ease),background var(--ease);
 }
@@ -102,7 +101,7 @@ body{
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
   padding:14px 26px;border-bottom:1px solid var(--border);
-  background:var(--surface);position:sticky;top:0;z-index:40;
+  background:var(--surface);position:sticky;top:0;z-index:10;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
 }
 .topbar h1{font-family:var(--font-d);font-size:20px;font-weight:700;letter-spacing:-.3px}
@@ -137,7 +136,7 @@ body{
 /* HAMBURGER */
 .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:10px;border:none;background:transparent;border-radius:8px;-webkit-tap-highlight-color:transparent;min-width:44px;min-height:44px;justify-content:center;align-items:center}
 .hamburger span{width:20px;height:2px;background:var(--text2);border-radius:1px;display:block;transition:all var(--ease)}
-.sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:58;display:none;opacity:0;transition:opacity var(--ease);pointer-events:none}
+.sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;opacity:0;transition:opacity var(--ease);pointer-events:none}
 .sb-overlay.on{display:block;opacity:1;pointer-events:all}
 
 /* ══════════════════════════════════════════════════════
@@ -372,7 +371,7 @@ body{
    POMODORO
 ══════════════════════════════════════════════════════ */
 .pomo{
-  position:fixed;bottom:22px;right:22px;z-index:100;
+  position:fixed;bottom:22px;right:22px;z-index:30;
   background:var(--surface);border:1.5px solid var(--border2);
   border-radius:18px;padding:17px 20px;width:248px;
   box-shadow:var(--shadow-lg);
@@ -398,7 +397,7 @@ body{
 /* ══════════════════════════════════════════════════════
    TOAST
 ══════════════════════════════════════════════════════ */
-.toast-box{position:fixed;top:16px;right:16px;z-index:600;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast-box{position:fixed;top:16px;right:16px;z-index:300;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 .toast{background:var(--surface2);border:1.5px solid var(--border2);border-radius:11px;padding:10px 15px;font-size:13px;font-weight:600;color:var(--text);box-shadow:var(--shadow);max-width:260px;animation:tIn .3s ease both}
 .toast.out{animation:tOut .25s ease both}
 @keyframes tIn{from{opacity:0;transform:translateX(110%)}to{opacity:1;transform:translateX(0)}}
@@ -418,7 +417,7 @@ body{
    BOTTOM NAV (mobile)
 ══════════════════════════════════════════════════════ */
 .bot-nav{
-  display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:20;
   background:var(--surface);border-top:1px solid var(--border);
   grid-template-columns:repeat(4,1fr);
   padding:5px 4px env(safe-area-inset-bottom,0px);
@@ -448,8 +447,8 @@ body{
    TABLET
 ══════════════════════════════════════════════════════ */
 @media(max-width:860px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}
+  .sidebar{transform:translateX(-100%);pointer-events:none}
+  .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg);pointer-events:all}
   .main{margin-left:0}
   .hamburger{display:flex}
   .stats{grid-template-columns:1fr 1fr}
@@ -595,7 +594,7 @@ body{
 <body data-theme="dark">
 <canvas id="cc"></canvas>
 <div class="toast-box" id="toastBox"></div>
-<div class="sb-overlay" id="sbOverlay" onclick="closeSB()"></div>
+<div class="sb-overlay" id="sbOverlay" onclick="closeSB()"></div></div>
 
 <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
 <aside class="sidebar" id="sidebar">
@@ -931,12 +930,27 @@ function toggleTheme(){
    SIDEBAR
 ════════════════════════════════════════ */
 function toggleSB(){
-  const open=document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sbOverlay').classList.toggle('on',open);
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sbOverlay');
+  const opening=!sb.classList.contains('open');
+  if(opening){
+    ov.style.display='block';
+    document.body.style.overflow='hidden'; // previne scroll do fundo
+    requestAnimationFrame(()=>{
+      sb.classList.add('open');
+      ov.classList.add('on');
+    });
+  } else {
+    closeSB();
+  }
 }
 function closeSB(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sbOverlay').classList.remove('on');
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sbOverlay');
+  sb.classList.remove('open');
+  ov.classList.remove('on');
+  document.body.style.overflow='';
+  setTimeout(()=>{if(!ov.classList.contains('on'))ov.style.display='none';},220);
 }
 
 /* ════════════════════════════════════════
@@ -992,23 +1006,8 @@ function reqNotif(){
     if(p==='granted'){
       notifOk=true;
       document.getElementById('notifBanner').style.display='none';
-      if(navigator.serviceWorker && 'showTrigger' in Notification.prototype){
-        toast('🔔 Notificações ativadas e funcionarão mesmo com app fechado!');
-      }else{
-        toast('🔔 Notificações ativadas, MAS só serão disparadas com app aberto.');
-        toast('Para receber com app fechado você precisará implementar Push/API servidor ou usar Chrome Android PWA.');
-        // Typical push-subscription flow (requires server):
-        // navigator.serviceWorker.ready.then(reg=>{
-        //   return reg.pushManager.subscribe({
-        //     userVisibleOnly: true,
-        //     applicationServerKey: VAPID_PUBLIC_KEY
-        //   });
-        // }).then(sub=>{
-        //   // enviar `sub` ao seu servidor e agendar notificações por lá
-        // });
-      }
+      toast('🔔 Notificações ativadas!');
       new Notification('Tarefas ✓',{body:'Você receberá lembretes aqui!'});
-      schedAll();
     }else toast('🔕 Permissão negada');
   });
 }
@@ -1016,49 +1015,19 @@ function reqNotif(){
 const _timers={};
 
 function schedRemind(t){
-  // cancelar qualquer timer ou notificação prévia
+  // Cancelar timer anterior se existir
   if(_timers[t.id]){clearTimeout(_timers[t.id]);delete _timers[t.id];}
-  if(navigator.serviceWorker && 'getNotifications' in ServiceWorkerRegistration.prototype){
-    navigator.serviceWorker.ready.then(reg=>{
-      reg.getNotifications({tag:'task-'+t.id}).then(ns=>ns.forEach(n=>n.close()));
-    });
-  }
-  if(!notifOk||!t.remind||!t.date) return;
+  if(!notifOk||!t.remind||!t.date)return;
+  // Usar horário definido ou 09:00 como padrão
   const hora=t.time&&t.time.trim()?t.time:'09:00';
-  let dt;
-  try{
-    const [y,m,d]=t.date.split('-').map(n=>parseInt(n,10));
-    const [hh,mm]=hora.split(':').map(n=>parseInt(n,10));
-    dt=new Date(y,m-1,d,hh,mm,0,0);
-  }catch{
-    dt=new Date(t.date+' '+hora);
-  }
-  const ms=dt - Date.now();
-  if(ms<=0||ms>30*86400*1000) return;
-
-  // se o navegador suportar Notification Triggers via service worker,
-  // usamos a API para disparar mesmo com app fechado
-  if(navigator.serviceWorker && 'showTrigger' in Notification.prototype){
-    navigator.serviceWorker.ready.then(reg=>{
-      reg.showNotification('⏰ '+t.title,{
-        body:(t.time?t.time+' — ':'')+
-             (CATS[t.category]?CATS[t.category].l:'')+(t.notes?' • '+t.notes.slice(0,60):''),
-        tag:'task-'+t.id,
-        requireInteraction:true,
-        silent:false,
-        showTrigger:new TimestampTrigger(dt.getTime())
-      });
-    });
-    // timers locais não são necessários, mas mantemos registro vazio
-    _timers[t.id]=null;
-    return;
-  }
-
-  // fallback tradicional quando app estiver aberto
+  const dt=new Date(t.date+'T'+hora+':00');
+  const ms=dt-Date.now();
+  // Só agenda se no futuro e dentro de 30 dias
+  if(ms<=0||ms>30*86400*1000)return;
   _timers[t.id]=setTimeout(()=>{
     delete _timers[t.id];
     const cur=tasks.find(x=>x.id===t.id);
-    if(!cur||cur.done) return;
+    if(!cur||cur.done)return;
     if(Notification.permission==='granted'){
       const notif=new Notification('⏰ '+cur.title,{
         body:(cur.time?cur.time+' — ':'')+
@@ -1069,6 +1038,7 @@ function schedRemind(t){
       });
       notif.onclick=()=>{window.focus();notif.close();};
     }
+    // Toast in-app também
     toast('⏰ '+cur.title+(cur.time?' às '+cur.time:''),5000);
   },ms);
 }
@@ -1538,6 +1508,7 @@ function goView(v,navEl){
   if(v==='analytics')renderAnalytics();
   if(navEl){document.querySelectorAll('.sidebar .nb').forEach(e=>e.classList.remove('on'));navEl.classList.add('on')}
   closeSB();
+  closeSB();
 }
 function bnSet(v){
   ['list','calendar','analytics'].forEach(id=>{
@@ -1580,12 +1551,15 @@ document.addEventListener('keydown',e=>{
 /* ════════════════════════════════════════
    SWIPE GESTURE (mobile)
 ════════════════════════════════════════ */
-let tx0=0;
-document.addEventListener('touchstart',e=>{tx0=e.touches[0].clientX},{passive:true});
+let tx0=0,ty0=0;
+document.addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;},{passive:true});
 document.addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-tx0;
-  if(tx0<24&&dx>55)toggleSB();
-  if(dx<-55&&document.getElementById('sidebar').classList.contains('open'))closeSB();
+  const dy=Math.abs(e.changedTouches[0].clientY-ty0);
+  // Ignorar gestos principalmente verticais (scroll)
+  if(dy>Math.abs(dx)*1.5)return;
+  if(tx0<28&&dx>60)toggleSB();
+  if(dx<-60&&document.getElementById('sidebar').classList.contains('open'))closeSB();
 },{passive:true});
 
 /* ════════════════════════════════════════
@@ -1594,20 +1568,6 @@ document.addEventListener('touchend',e=>{
 document.getElementById('topDate').textContent=
   new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 load();checkNotif();renderAll();schedAll();
-
-// if the page was in background the timers might have been throttled or cleared;
-// when user returns we reschedule everything so nothing is missed
-document.addEventListener('visibilitychange',()=>{if(!document.hidden) schedAll();});
-
-// register service worker in case we have push/trigger support
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW reg failed',e));
-}
-
-// warn if neither background triggers nor push will work without a server
-if('serviceWorker' in navigator && !('showTrigger' in Notification.prototype)){
-  toast('⚠️ Sem agendamento nativo. Chrome/Android PWA com Push/servidor é necessário.');
-}
 </script>
 </body>
 </html>
